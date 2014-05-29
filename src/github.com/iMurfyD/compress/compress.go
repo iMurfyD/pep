@@ -26,7 +26,8 @@ func compress(uncompressedData *[]byte) (*CompressedData, error) {
 	for i := 0; i < len(*uncompressedData); i += size {
 		slice := (*uncompressedData)[i:size]
 		fmt.Println(slice)
-		//will add bit to "comp"
+		comp.Add(slice)
+		//will add "slice" to "comp"
 		//fill in later
 		//keep Println to check to make sure that it works
 	}
