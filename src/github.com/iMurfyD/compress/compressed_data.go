@@ -5,7 +5,7 @@ import (
 )
 
 //Instead of writing []byte for matching data of variable length
-type memory []byte
+type Memory []byte
 
 //represents compressed buffer as a series of int's (index of memory) which each correspond to a block of memory
 //once this works I should probably use a more effiecient data type
