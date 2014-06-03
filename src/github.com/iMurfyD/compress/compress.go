@@ -14,7 +14,8 @@ func To(fromFile, toFile string) {
 		fmt.Println("File is screwed up or does not exist")
 	} else {
 		fmt.Println("Compressing thingy", data)
-		compress(&data)
+		m := toMemory(data)
+		compress(&m)
 	}
 }
 
@@ -30,18 +31,11 @@ func compress(uncompressedData *Memory) (*CompressedData, error) {
 		comp.Add(slice)
 		fmt.Println(comp)
 		//TODO
-		//will add "slice" to "comp"
+		//will add "slice" to "comp" properly
 		//fill in later
 		//keep Println to check to make sure that it works
 	}
 	return comp, nil
-}
-
-//meant to wrap a byteSize independant of the numberOfTokens
-//I was originally going to represent this by the array index, however this seems less ambiguous and prone to a weird screw up
-type byteSize struct {
-	bs     int
-	tokens int
 }
 
 func determineBestByteSize(uncompressedData *Memory) (int, error) {
@@ -56,17 +50,21 @@ func determineBestByteSize(uncompressedData *Memory) (int, error) {
 		length = len(uncompressedDataPt)
 	}
 
+	fmt.Println(uncompressedDataPt[:length])
+
 	var tokenNumbersAtVariousByteSizes []byteSize
 	for i := 0; i < length-2; i++ {
 		//TODO
 		//make numOfTokens run in a seperate goroutine
-		tokenNumbersAtVariousByteSizes = append(tokenNumbersAtVariousByteSizes, numOfTokens(uncompressedData, i))
+		tokenNumbersAtVariousByteSizes = append(tokenNumbersAtVariousByteSizes, byteSize{tokens: numOfTokens(uncompressedData, i), bs: i})
 	}
+	max := maxByteSize(tokenNumbersAtVariousByteSizes)
+	return max.bs, nil
 }
 
 func isNewForTokenList(tokens *[]Memory, data *Memory) bool {
-	for _, t := range *Memory {
-		if bytes.Equal(t, *Memory) {
+	for _, t := range *tokens {
+		if bytes.Equal(t, toBytes(*data)) {
 			return false
 		}
 	}
@@ -74,16 +72,15 @@ func isNewForTokenList(tokens *[]Memory, data *Memory) bool {
 }
 
 //figures out the number of tokens in an bunch of Memory with a given byte size
-func numOfTokens(data *Memory, bs int) byteSize {
-	var tokens []Memory
-	var numOfTokens byteSize
+func numOfTokens(data *Memory, bs int) int {
+	var tokens_list []Memory
+	var number_of_tokens int
 	for i := 0; i < len(*data); i += bs {
-		m := Memory[i : i+bs]
-		if isNewForTokenList(tokens, m) {
-			tokens = append(tokens, m)
-			numOfTokens++
+		m := toMemory(toBytes(*data)[i : i+bs])
+		if isNewForTokenList(&tokens_list, &m) {
+			tokens_list = append(tokens_list, m)
+			number_of_tokens++
 		}
 	}
-	ret := byteSize{bs: i, tokens: numOfTokens}
-	return ret
+	return number_of_tokens
 }
