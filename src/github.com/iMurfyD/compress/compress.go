@@ -15,6 +15,9 @@ func To(fromFile, toFile string) {
 	} else {
 		fmt.Println("Compressing thingy", data)
 		m := toMemory(data)
+		//TODO
+		//pipe out put of compress to WriteFile
+		//currently only puts original content into WriteFile
 		compress(&m)
 		ioutil.WriteFile(toFile, m, 0666)
 	}
@@ -33,7 +36,7 @@ func compress(uncompressedData *Memory) (*CompressedData, error) {
 		var slice Memory
 
 		//determine if current slice is end slice (not to go out of bounds)
-		if i+size > len(*uncompressedData) {
+		if i+size >= len(*uncompressedData) {
 			slice = (*uncompressedData)[i:]
 		} else {
 			slice = (*uncompressedData)[i:size]
@@ -68,7 +71,7 @@ func determineBestByteSize(uncompressedData *Memory) (int, error) {
 	for i := 1; i <= length/2; i++ {
 		fmt.Printf("Running BS: %d\n", i)
 		//TODO
-		//make numOfTokens run in a seperate goroutine
+		//make numOfTokens run in a seperate goroutine + syncronize goroutines togethor
 		tokenNumbersAtVariousByteSizes = append(tokenNumbersAtVariousByteSizes, byteSize{tokens: numOfTokens(uncompressedData, i), bs: i})
 	}
 	max := maxByteSize(tokenNumbersAtVariousByteSizes)
@@ -90,7 +93,13 @@ func numOfTokens(data *Memory, bs int) int {
 	var number_of_tokens int
 	number_of_tokens = 0
 	for i := 0; i < len(*data); i += bs {
-		m := toMemory(toBytes(*data)[i : i+bs])
+		var m Memory
+		//added to make sure no out of bounds exceptions happen
+		if i+bs >= len(*data) {
+			m = toMemory(toBytes(*data)[i:])
+		} else {
+			m = toMemory(toBytes(*data)[i : i+bs])
+		}
 		if isNewForTokenList(&tokens_list, &m) {
 			fmt.Printf("     Detected new Token(%s)\n", m)
 			tokens_list = append(tokens_list, m)
