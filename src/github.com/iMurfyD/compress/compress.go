@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"os"
 )
 
 func To(fromFile, toFile string) {
@@ -17,9 +16,7 @@ func To(fromFile, toFile string) {
 		fmt.Println("Compressing thingy", data)
 		m := toMemory(data)
 		compress(&m)
-		//TODO
-		//Don't know what type of file permission to pass in
-		ioutil.WriteFile(toFile, m, os.ModeDevice)
+		ioutil.WriteFile(toFile, m, 0666)
 	}
 }
 
