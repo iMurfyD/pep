@@ -8,9 +8,9 @@ import (
 )
 
 func main() {
-	if len(os.Args) < 2 {
+	if len(os.Args) < 3 {
 		fmt.Println("Need a file")
 	} else {
-		compress.To(os.Args[1], os.Args[1])
+		compress.To(os.Args[1], os.Args[2])
 	}
 }

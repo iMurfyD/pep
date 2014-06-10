@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
+	"os"
 )
 
 func To(fromFile, toFile string) {
@@ -16,17 +17,31 @@ func To(fromFile, toFile string) {
 		fmt.Println("Compressing thingy", data)
 		m := toMemory(data)
 		compress(&m)
+		//TODO
+		//Don't know what type of file permission to pass in
+		ioutil.WriteFile(toFile, m, os.ModeDevice)
 	}
 }
 
 func compress(uncompressedData *Memory) (*CompressedData, error) {
 	size, err := determineBestByteSize(uncompressedData)
+	fmt.Printf("Best BS: %d\n", size)
 	if err != nil {
 		return nil, errors.New("Could not determine best byte size")
 	}
 	comp := NewCompressedData(size)
+	fmt.Println("Made comp")
 	for i := 0; i < len(*uncompressedData); i += size {
-		slice := (*uncompressedData)[i:size]
+		fmt.Printf("Adding slice to comp")
+		var slice Memory
+
+		//determine if current slice is end slice (not to go out of bounds)
+		if i+size > len(*uncompressedData) {
+			slice = (*uncompressedData)[i:]
+		} else {
+			slice = (*uncompressedData)[i:size]
+		}
+
 		fmt.Println(slice)
 		comp.Add(slice)
 		fmt.Println(comp)
@@ -53,7 +68,8 @@ func determineBestByteSize(uncompressedData *Memory) (int, error) {
 	fmt.Println(uncompressedDataPt[:length])
 
 	var tokenNumbersAtVariousByteSizes []byteSize
-	for i := 0; i < length-2; i++ {
+	for i := 1; i <= length/2; i++ {
+		fmt.Printf("Running BS: %d\n", i)
 		//TODO
 		//make numOfTokens run in a seperate goroutine
 		tokenNumbersAtVariousByteSizes = append(tokenNumbersAtVariousByteSizes, byteSize{tokens: numOfTokens(uncompressedData, i), bs: i})
@@ -75,12 +91,15 @@ func isNewForTokenList(tokens *[]Memory, data *Memory) bool {
 func numOfTokens(data *Memory, bs int) int {
 	var tokens_list []Memory
 	var number_of_tokens int
+	number_of_tokens = 0
 	for i := 0; i < len(*data); i += bs {
 		m := toMemory(toBytes(*data)[i : i+bs])
 		if isNewForTokenList(&tokens_list, &m) {
+			fmt.Printf("     Detected new Token(%s)\n", m)
 			tokens_list = append(tokens_list, m)
 			number_of_tokens++
 		}
 	}
+	fmt.Printf("Number of Tokens (BS: %d): %d\n", bs, number_of_tokens)
 	return number_of_tokens
 }
