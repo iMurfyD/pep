@@ -1,6 +1,6 @@
 package compress
 
-//Instead of writing []byte for matching data of variable length
+// Instead of writing []byte for matching data of variable length
 type Memory []byte
 
 func toMemory(b []byte) Memory {
